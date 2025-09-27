@@ -1,0 +1,63 @@
+import pandas as pd
+data = pd.read_csv("/content/tox21.csv")
+
+#Task 2
+data.head()
+print("\nDataset Shape:", data.shape)
+print("\nColumns and Types:\n", data.dtypes)
+print("\nMissing Values:\n", data.isnull().sum())
+
+#Task 3
+print("\nSummary Statistics:\n")
+print(data.describe())
+
+#Task 4
+import seaborn as sns
+import matplotlib.pyplot as plt
+print("\nSummary Statistics:\n")
+print(data.describe())print("\nSummary Statistics:\n")
+print(data.describe())
+numeric_data = data.select_dtypes(include=['float64', 'int64'])
+
+# Correlation heatmap
+plt.figure(figsize=(10,6))
+sns.heatmap(numeric_data.corr(), annot=True, cmap="coolwarm", fmt=".2f")
+plt.title("Correlation Heatmap of Drug Properties")
+plt.show()
+
+#Task 5
+# Identify NR and SR assay columns
+
+nr_cols = ["NR-AR","NR-AR-LBD","NR-AhR","NR-Aromatase","NR-ER","NR-ER-LBD","NR-PPAR-gamma"]
+
+sr_cols = ["SR-ARE","SR-ATAD5","SR-HSE","SR-MMP","SR-p53"]
+
+# Step 1: Calculate summary scores
+data["NR_score"] = data[nr_cols].mean(axis=1)   # average NR activation
+
+data["SR_score"] = data[sr_cols].mean(axis=1)   # average SR activation (toxicity risk)
+
+# Step 2: Apply filtering criteria
+
+# - High NR activity: NR_score > 0.5
+# - Low SR activity: SR_score < 0.3
+
+selected = data[(data["NR_score"] > 0.5) & (data["SR_score"] < 0.3)]
+
+print("Number of promising candidates:", selected.shape[0])
+print("Preview of selected drugs:")
+print(selected[["mol_id","NR_score","SR_score"]].head())
+
+#Task 6 and 7
+# Step 3: Visualization
+
+plt.figure(figsize=(8,6))
+sns.scatterplot(data=data, x="NR_score", y="SR_score", alpha=0.4, label="All Compounds")
+sns.scatterplot(data=selected, x="NR_score", y="SR_score", color="red", s=100, label="Selected Candidates")
+plt.axhline(0.3, color="blue", linestyle="--", label="Low Toxicity Threshold")
+plt.axvline(0.5, color="green", linestyle="--", label="High NR Activity Threshold")
+plt.xlabel("Average Nuclear Receptor (NR) Activity")
+plt.ylabel("Average Stress Response (SR) Activity")
+plt.title("Drug Candidate Selection: High NR Activity & Low SR Activity")
+plt.legend()
+plt.show()
